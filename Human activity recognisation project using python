@@ -1,0 +1,51 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, classification_report
+
+# Function to load the dataset
+def load_data():
+    base_path = '/mnt/data/UCI_HAR_Dataset/UCI HAR Dataset/'
+    features = pd.read_csv(base_path + 'features.txt', delim_whitespace=True, header=None)
+    activity_labels = pd.read_csv(base_path + 'activity_labels.txt', delim_whitespace=True, header=None)
+
+    # Load training data
+    X_train = pd.read_csv(base_path + 'train/X_train.txt', delim_whitespace=True, header=None)
+    y_train = pd.read_csv(base_path + 'train/y_train.txt', delim_whitespace=True, header=None)
+    subject_train = pd.read_csv(base_path + 'train/subject_train.txt', delim_whitespace=True, header=None)
+
+    # Load test data
+    X_test = pd.read_csv(base_path + 'test/X_test.txt', delim_whitespace=True, header=None)
+    y_test = pd.read_csv(base_path + 'test/y_test.txt', delim_whitespace=True, header=None)
+    subject_test = pd.read_csv(base_path + 'test/subject_test.txt', delim_whitespace=True, header=None)
+
+    # Merge train and test data
+    X = pd.concat([X_train, X_test], axis=0)
+    y = pd.concat([y_train, y_test], axis=0)
+    subject = pd.concat([subject_train, subject_test], axis=0)
+
+    return X, y, subject, features, activity_labels
+
+# Load data
+X, y, subject, features, activity_labels = load_data()
+
+# Normalize the data
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Split the data into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3, random_state=42)
+
+# Train the SVM model
+svm_model = SVC(kernel='linear', C=1)
+svm_model.fit(X_train, y_train.values.ravel())
+
+# Predict on the test set
+y_pred = svm_model.predict(X_test)
+
+# Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+print(f'Accuracy: {accuracy}')
+print(classification_report(y_test, y_pred, target_names=activity_labels[1].values))
